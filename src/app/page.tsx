@@ -1,9 +1,11 @@
 import Link from "next/link";
 
-import { api } from "@/trpc/server";
+import { api } from "@/trpc/react";
 
-export default async function Home() {
-  const hello = await api.post.hello.query({ text: "from tRPC" });
+export default function Home() {
+  const hello = api.post.hello.useQuery({
+    text: "from testing shit, possibly viable?",
+  });
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
