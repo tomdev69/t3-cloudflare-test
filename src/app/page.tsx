@@ -1,14 +1,17 @@
-"use client";
 import Link from "next/link";
 
-import { api } from "@/trpc/react";
+import { auth, signIn } from "@/auth";
+import { useSession } from "next-auth/react"
+import { SignIn } from "./_components/auth-components";
+import { api } from "@/trpc/server";
 
-export default function Home() {
-  const hello = api.post.hello.useQuery({
+export default async function Home() {
+  const hello = api.post.hello.query({
     text: "from testing shit, possibly viable?",
   });
-
+  const session = await auth()
   console.log(hello);
+  console.log(session)
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
@@ -42,6 +45,7 @@ export default function Home() {
         </div>
         <div className="flex flex-col items-center gap-2">
           <p className="text-2xl text-white">"Loading tRPC query..."</p>
+          <SignIn/>
         </div>
       </div>
     </main>

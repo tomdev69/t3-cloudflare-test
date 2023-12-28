@@ -1,17 +1,15 @@
-// import { Client } from "@planetscale/database";
-import { drizzle } from "drizzle-orm/d1";
-
 import { env } from "@/env";
-import * as schema from "./schema";
+import { PrismaClient } from "@prisma/client/edge";
 
-// export const get = (d1: D1Database) => drizzle(d1, { schema });
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
 
-export interface Env {
-  DB: D1Database;
-}
+export const db =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log:
+      env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+  });
 
-// let a: Env['DB']
-export const db = drizzle(
-  process.env.DB as unknown as D1Database,
-  { schema }
-);
+if (env.NODE_ENV !== "production") globalForPrisma.prisma = db;

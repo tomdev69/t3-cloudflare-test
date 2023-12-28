@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 // import { cookies } from "next/headers";
 
 import { TRPCReactProvider } from "@/trpc/react";
+import { SessionProvider } from "next-auth/react";
 
 export const runtime = "edge";
 
@@ -27,7 +28,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans ${inter.variable}`}>
         <TRPCReactProvider>
+        <SessionProvider>
           {children}
+          </SessionProvider>
         </TRPCReactProvider>
       </body>
     </html>

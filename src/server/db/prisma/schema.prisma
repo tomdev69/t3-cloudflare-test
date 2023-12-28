@@ -1,0 +1,294 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+  oauth_token        String?
+  oauth_token_secret String?
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                  String          @id @unique @default(cuid())
+  name                String?
+  address             String?         @unique
+  email               String?         @unique
+  emailVerified       DateTime?
+  image               String?
+  cash                BigInt?         @default(0)
+  discordName         String?
+  twitterName         String?
+  discordImage        String?
+  twitterImage        String?
+  admin               Boolean         @default(false)
+  oneTimeDiscord      Boolean         @default(false)
+  oneTimeTwitter      Boolean         @default(false)
+  discordEmail        String?
+  prefferedUsername   Boolean         @default(false)
+  totalCash           BigInt?         @default(0)
+  twitterEmail        String?
+  twitterId           String?
+  oneTimeMap          Boolean?        @default(false)
+  twitterAccessToken  String?
+  twitterRefreshToken String?
+  twitterExpiresAt    Int?
+  badges              Json[]
+  bio                 String?
+  pfp                 String?         @default("/test.png")
+  username            String?         @unique
+  accounts            Account[]
+  sessions            Session[]
+  user_bounties       user_bounties[]
+  user_events         user_events[]
+  user_locations      user_locations?
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Signatures {
+  id        String @id @default(cuid())
+  signature String @unique
+}
+
+model events {
+  event_id         String        @id @default(cuid())
+  cost             String
+  token_gated      Boolean       @default(false)
+  max_guests       Int?
+  image_url        String?
+  timezone         String?
+  start_at         DateTime?     @db.Timestamptz(6)
+  end_at           DateTime?     @db.Timestamptz(6)
+  geo_latitude     String?
+  geo_longitude    String?
+  luma_event_id    String?
+  geo_address_json Json?
+  name             String?
+  geo_name         String?
+  description      String?
+  type             String?
+  user_events      user_events[]
+}
+
+model user_events {
+  user_id   String    @default(cuid())
+  event_id  String    @default(cuid())
+  timestamp DateTime? @db.Timestamptz(6)
+  events    events    @relation(fields: [event_id], references: [event_id], onDelete: Cascade, onUpdate: NoAction)
+  users     User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([user_id, event_id])
+}
+
+model user_locations {
+  user_id                String    @id @default(cuid())
+  geo_latitude           String
+  geo_longitude          String
+  timestamp              DateTime? @default(now()) @db.Timestamptz(6)
+  image_url              String?
+  geo_name               String?
+  user_name              String?
+  updateAuthorityAddress String?
+  place_id               String?
+  discord_user_id        String?
+  twitter_user_id        String?
+  users                  User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model bounties {
+  begin_timestamp     DateTime?       @default(now()) @db.Timestamptz(6)
+  bounty_name         String?         @db.VarChar(255)
+  bounty_requirements Json?
+  bounty_reward       Int?
+  end_timestamp       DateTime?       @db.Timestamptz(6)
+  live                Boolean?
+  id                  String          @id @default(cuid())
+  bounty_image        String?
+  posted_by           String?
+  bounty_description  String?
+  user_bounties       user_bounties[]
+}
+
+model user_bounties {
+  Awarded          Boolean?
+  bounty_id        String    @default(cuid())
+  signature        String?
+  signature_status String?
+  status           String?
+  timestamp        DateTime? @default(now()) @db.Timestamptz(6)
+  user_id          String    @default(cuid())
+  bounties         bounties  @relation(fields: [bounty_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users            User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([user_id, bounty_id])
+}
+
+model AllowedCollections {
+  moonrankID       String?  @unique
+  howrareisID      String?
+  id               String   @id @default(dbgenerated("gen_random_uuid()"))
+  checkedhowrareis Boolean? @default(false)
+  checkedmoonrank  Boolean? @default(false)
+}
+
+model Collection {
+  id                String  @id
+  supply            Int
+  collectionAddress String?
+  description       String?
+  name              String?
+}
+
+model Metadata {
+  mint              String             @id @unique
+  tensorRank        Int?
+  name              String?
+  attributes        Json?              @db.Json
+  collection        String?
+  image             String?
+  image_updated     Boolean?           @default(false)
+  collection_mint   String?
+  TensorCollections TensorCollections? @relation(fields: [collection_mint], references: [collection_mint], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model TensorCollections {
+  id              BigInt     @id @default(autoincrement())
+  collection_name String?
+  floor_price     BigInt?
+  collection_mint String?    @unique
+  tensor_slug     String?    @unique
+  checked         Boolean?   @default(false)
+  tensor_id       String?    @unique
+  Metadata        Metadata[]
+  testing         testing?
+}
+
+model Metadata2 {
+  mint            String   @id(map: "Metadata__pkey1")
+  moonrank        Int?
+  howrareis       Int?
+  name            String?
+  attributes      Json?    @db.Json
+  collection      String?
+  image           String?
+  image_updated   Boolean? @default(false)
+  collection_mint String?
+}
+
+model prize {
+  address     String   @id @unique
+  prize_index BigInt
+  merkle_tree String
+  claimed     Boolean  @default(false)
+  winner      String?
+  created_at  DateTime @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  updated_at  DateTime @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  raffle      String
+  prize_mint  String?
+}
+
+model raffle {
+  creator          String
+  max_entrants     BigInt
+  ticket_price     BigInt
+  ends_at          DateTime @db.Timestamptz(6)
+  randomness       String?
+  status           String
+  created_at       DateTime @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  updated_at       DateTime @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  address          String   @id
+  upvotes          String[]
+  reports          String[]
+  proceeds_claimed Boolean? @default(false)
+  version          BigInt?  @default(0)
+  cash_paid        Boolean? @default(false)
+  proceeds_mint    String?
+}
+
+model raffles_signature_checkpoint {
+  signature  String   @id(map: "Raffles_Signature_Checkpoint_pkey") @unique(map: "Raffles_Signature_Checkpoint_signature_key")
+  created_at DateTime @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  updated_at DateTime @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+}
+
+model raffles_signatures {
+  signature  String    @id(map: "Raffles_Signatures_pkey") @unique(map: "Raffles_Signatures_signature_key")
+  slot       BigInt?
+  created_at DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  error      String?
+  block_time DateTime? @db.Timestamptz(6)
+  updated_at DateTime  @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+}
+
+model raffles_user {
+  address         String   @id(map: "Raffles_User_pkey") @unique(map: "Raffles_User_address_key")
+  raffles_created BigInt?
+  tickets_bought  BigInt?
+  prizes_won      BigInt?
+  created_at      DateTime @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  updated_at      DateTime @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+}
+
+model ticket {
+  id           String   @id(map: "Ticket_pkey") @unique(map: "Ticket_id_key") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  buyer        String?
+  raffle       String?
+  ticket_index BigInt?
+  status       String?
+  created_at   DateTime @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+  updated_at   DateTime @default(dbgenerated("(now() AT TIME ZONE 'utc'::text)")) @db.Timestamptz(6)
+
+  @@unique([raffle, ticket_index], map: "unique_raffle_ticket_index")
+}
+
+model diesel_schema_migrations {
+  version String   @id @db.VarChar(50)
+  run_on  DateTime @default(now()) @db.Timestamp(6)
+
+  @@map("__diesel_schema_migrations")
+}
+
+model testing {
+  id                BigInt             @id @default(autoincrement())
+  collection_name   String?
+  floor_price       BigInt?
+  collection_mint   String?            @unique
+  tensor_slug       String?            @unique
+  checked           Boolean?           @default(false)
+  tensor_id         String?            @unique
+  TensorCollections TensorCollections? @relation(fields: [collection_mint], references: [collection_mint], onDelete: NoAction, onUpdate: NoAction)
+}
