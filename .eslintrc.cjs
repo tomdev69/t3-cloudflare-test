@@ -6,7 +6,7 @@ const config = {
   },
   plugins: ["@typescript-eslint"],
   extends: [
-    "plugin:@next/next/recommended",
+    "next/core-web-vitals",
     "plugin:@typescript-eslint/recommended-type-checked",
     "plugin:@typescript-eslint/stylistic-type-checked",
   ],
@@ -24,9 +24,8 @@ const config = {
       },
     ],
     "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
-    "@typescript-eslint/require-await": "off",
     "@typescript-eslint/no-misused-promises": [
-      "error",
+      2,
       {
         checksVoidReturn: { attributes: false },
       },
